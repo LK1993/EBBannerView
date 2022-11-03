@@ -76,12 +76,24 @@ static EBEmptyWindow *emptyWindow;
         return [view hitTest:point1 withEvent:event];
     } else {
         if (@available(iOS 13.0, *)) {
-            if (UIApplication.sharedApplication.windows.count > 0) {
-                UIWindow *window = UIApplication.sharedApplication.windows[0];
-                if (window.isKeyWindow) {
+            NSEnumerator *frontToBackWindows = [UIApplication.sharedApplication.windows reverseObjectEnumerator];
+                        
+            for(UIWindow *window in frontToBackWindows) {
+                BOOL windowOnMainScreen = window.screen == UIScreen.mainScreen;
+                BOOL windowIsVisible = !window.hidden && window.alpha > 0;
+                BOOL windowLevelNormal = window.windowLevel == UIWindowLevelNormal;
+                if(windowOnMainScreen && windowIsVisible && windowLevelNormal) {
                     return [window hitTest:point withEvent:event];
+                    break;
                 }
             }
+
+//            if (UIApplication.sharedApplication.windows.count > 0) {
+//                UIWindow *window = UIApplication.sharedApplication.windows[0];
+//                if (window.isKeyWindow) {
+//                    return [window hitTest:point withEvent:event];
+//                }
+//            }
             //iOS13以后，keyWindow不再是最开始创建的window，而是当前显示的window，这么写会造成某些场景死循环。
 //            return [UIApplication.sharedApplication.keyWindow hitTest:point withEvent:event];
         }
